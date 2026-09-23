@@ -103,6 +103,7 @@ button:disabled { cursor: default; text-decoration: none; opacity: 0.35; }
 .ranks { padding-top: 2px; display: grid; grid-template-rows: repeat(8, var(--sq)); width: 0.9em; text-align: right; }
 .ranks span { display: flex; align-items: center; justify-content: flex-end; }
 .files { display: grid; grid-template-columns: repeat(8, var(--sq)); padding: 2px 2px 0; text-align: center; }
+.ranks, .files { color: #767676; }
 
 .squares { display: grid; grid-template-columns: repeat(8, var(--sq)); border: 2px solid #000; touch-action: none; }
 .ghost { position: fixed; left: 0; top: 0; width: var(--sq); height: var(--sq); pointer-events: none; z-index: 10; }
@@ -177,9 +178,9 @@ button:disabled { cursor: default; text-decoration: none; opacity: 0.35; }
   @supports (width: 1cqw) {
     .stage { container-type: size; }
     .box { width: min(100cqw, 100cqh); }
-    .bw { --sq: min(64px, calc((100cqw - 28px) / 8), calc((100cqh - 32px) / 8)); }
+    .bw { --sq: min(64px, calc((100cqw - 26px) / 8), calc((100cqh - 32px) / 8)); }
   }
-  .bw { flex: none; justify-content: center; }
+  .bw { flex: none; justify-content: center; padding-right: calc(0.9em + 6px); }   /* as wide on the right as the rank numbers are on the left, so the board sits in the middle */
   .squares { -webkit-touch-callout: none; }
 
   .tools { margin: 8px 0 0; justify-content: space-between; }
