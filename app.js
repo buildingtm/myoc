@@ -167,6 +167,7 @@
     makeArt(cur);
     persist();
     renderShelf();
+    syncPlay();
   }
 
   function renderShelf() {
@@ -181,7 +182,13 @@
     $('#step').textContent = `Piece ${cur + 1} of 6`;
     $('#prompt').textContent = `Draw a ${NAMES[cur]}.`;
     $('#hint').textContent = HINTS[cur];
-    $('#next').textContent = cur < 5 ? 'Next »' : 'Play »';
+    syncPlay();
+  }
+
+  function syncPlay() {
+    const ready = !missing().length;
+    $('#next').textContent = ready ? 'Play »' : 'Next »';
+    $('#nav-play').disabled = !ready;
   }
 
   function goto(i) {
@@ -203,10 +210,10 @@
   $('#clear').addEventListener('click', () => { if (live.length) { live = []; paintPad(); commit(); } });
   $('#next').addEventListener('click', () => {
     if (!live.length) { say(`Draw a ${NAMES[cur]} first. The box is empty.`); return; }
-    if (cur < 5) { say(''); goto(cur + 1); return; }
     const m = missing();
-    if (m.length) { say(`Not yet. Still missing: ${m.join(', ')}.`); goto(NAMES.indexOf(m[0])); return; }
-    show('play');
+    if (!m.length) { show('play'); return; }
+    if (cur < 5) { say(''); goto(cur + 1); return; }
+    say(`Not yet. Still missing: ${m.join(', ')}.`); goto(NAMES.indexOf(m[0]));
   });
 
   // ---- screens ------------------------------------------------------------------------
@@ -438,6 +445,7 @@
       drag.ghost.src = sprites[chess.b[sel]];
       document.body.appendChild(drag.ghost);
       drag.half = els[sel].offsetWidth / 2;
+      drag.ghost.style.width = drag.ghost.style.height = els[sel].offsetWidth + 'px';
       els[sel].firstChild.style.opacity = 0.3;
       document.body.classList.add('holding');
     }

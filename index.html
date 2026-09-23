@@ -20,8 +20,8 @@
   <!-- 1. draw the pieces -->
   <section id="draw" class="pane">
     <div class="drawing">
-      <div>
-        <div class="box"><canvas id="pad" width="800" height="800" aria-label="Drawing box"></canvas></div>
+      <div class="left">
+        <div class="stage"><div class="box"><canvas id="pad" width="800" height="800" aria-label="Drawing box"></canvas></div></div>
         <p class="tools">
           <button id="undo-stroke" type="button">Undo stroke</button>
           <button id="clear" type="button">Clear</button>
@@ -32,11 +32,11 @@
         <p id="step"></p>
         <h1 id="prompt"></h1>
         <p id="hint"></p>
-        <p><button id="next" type="button"></button></p>
+        <p class="go"><button id="next" type="button"></button></p>
         <hr>
         <ul id="shelf" class="shelf"></ul>
         <hr>
-        <p>The box is one square of the board. Close your outline and it gets filled in.</p>
+        <p class="note">The box is one square of the board. Close your outline and it gets filled in.</p>
       </div>
     </div>
   </section>
@@ -44,11 +44,13 @@
   <!-- 2. play with them -->
   <section id="play" class="pane" hidden>
     <div class="game">
-      <div class="bw">
-        <div id="ranks" class="ranks"></div>
-        <div>
-          <div id="squares" class="squares" role="group" aria-label="Chess board"></div>
-          <div id="files" class="files"></div>
+      <div class="stage">
+        <div class="bw">
+          <div id="ranks" class="ranks"></div>
+          <div>
+            <div id="squares" class="squares" role="group" aria-label="Chess board"></div>
+            <div id="files" class="files"></div>
+          </div>
         </div>
       </div>
 
@@ -69,7 +71,7 @@
         <div id="took-b" class="took"></div>
         <hr>
         <div id="moves" class="moves" tabindex="0" aria-label="Moves"></div>
-        <p><button id="copy" type="button">Copy moves</button></p>
+        <p class="copy"><button id="copy" type="button">Copy moves</button></p>
       </div>
     </div>
   </section>

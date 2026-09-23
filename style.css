@@ -38,16 +38,25 @@ button {
   padding: 0;
   text-align: left;
   cursor: pointer;
+  touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
-button:hover,
 button:focus-visible {
   text-decoration: underline;
   text-decoration-color: #f00;
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
+  outline: 2px dotted #000;
+  outline-offset: 3px;
 }
-button:focus-visible { outline: 2px dotted #000; outline-offset: 3px; }
+@media (hover: hover) {   /* touch screens keep :hover after a tap */
+  button:hover {
+    text-decoration: underline;
+    text-decoration-color: #f00;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+}
 button[aria-pressed="true"],
 button[aria-current="page"],
 button[aria-current="true"] { font-weight: 700; }
@@ -79,6 +88,8 @@ button:disabled { cursor: default; text-decoration: none; opacity: 0.35; }
 #pad { display: block; width: 100%; height: auto; aspect-ratio: 1; cursor: crosshair; touch-action: none; background: #fff; }
 .tools { margin-top: 0.7em; display: flex; gap: 24px; }
 .ask { flex: 1; min-width: 260px; max-width: 420px; }
+#next, .acts button { border: 2px solid #000; padding: 0.3em 1em; text-align: center; box-shadow: 3px 3px 0 #000; }
+#next:active, .acts button:not(:disabled):active { transform: translate(3px, 3px); box-shadow: none; }
 .shelf li { margin: 0; }
 .shelf button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 2px 0; }
 .shelf .n { width: 5.2em; }
@@ -103,14 +114,14 @@ button:disabled { cursor: default; text-decoration: none; opacity: 0.35; }
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='2' height='2'/%3E%3Crect x='2' y='2' width='2' height='2'/%3E%3C/svg%3E");
 }
 */
-.sq img { position: relative; width: 100%; height: 100%; pointer-events: none; }   /* relative so it sits over the last-move mark */
+.sq img { width: 100%; height: 100%; pointer-events: none; }
 .sq.last::before {
-  /* off the edge, or it blends into the square below */
+  /* not a box-shadow, the piece image would sit on top of it */
   content: "";
   position: absolute;
-  left: 10px; right: 10px; bottom: 6px;
-  height: 4px;
-  background: var(--mark);
+  left: 0; right: 0; bottom: 0;
+  height: 3px;
+  background: #f00;
 }
 .sq.sel { box-shadow: inset 0 -5px 0 #f00; }
 .sq.chk { box-shadow: inset 0 0 0 4px #f00; }
@@ -122,17 +133,19 @@ button:disabled { cursor: default; text-decoration: none; opacity: 0.35; }
   inset: 0;
   margin: auto;
   box-sizing: border-box;
-  width: 22px; height: 22px;
-  background: #fff;
-  border: 3px solid #000;
+  width: calc(var(--sq) * 0.3); height: calc(var(--sq) * 0.3);
+  border: max(2px, calc(var(--sq) * 0.04)) solid var(--mark);
   border-radius: 50%;
 }
 .sq.mine { cursor: grab; }
-.sq:hover, .sq.over { text-decoration: none; box-shadow: inset 0 -5px 0 #f00; }
+.sq.over { text-decoration: none; box-shadow: inset 0 -5px 0 #f00; }
+@media (hover: hover) {
+  .sq:hover { text-decoration: none; box-shadow: inset 0 -5px 0 #f00; }
+}
 .sq:focus-visible { outline: 3px dotted var(--mark); outline-offset: -3px; }
 
 .panel { flex: 1; min-width: 270px; }
-.acts { display: grid; grid-template-columns: max-content max-content; gap: 0 32px; }
+.acts { display: grid; grid-template-columns: max-content max-content; gap: 10px 12px; }
 #state { min-height: 1.35em; }
 #promo button { display: inline-flex; flex-direction: column; align-items: center; margin-right: 14px; vertical-align: top; }
 #promo img { width: 52px; height: 52px; border: 1px solid #000; }
@@ -146,9 +159,89 @@ button:disabled { cursor: default; text-decoration: none; opacity: 0.35; }
 .moves td { padding: 0 18px 0 0; }
 .moves td:first-child { width: 2.6em; }
 
-@media (max-width: 720px) {
+/* small screens: the window is the screen and nothing scrolls */
+@media (max-width: 720px), (max-height: 600px) {
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
   body { padding: 0; }
-  .win { box-shadow: none; border-width: 0 0 1px; }
-  .pane { padding: 16px; }
-  .menu, .status { padding-left: 16px; padding-right: 16px; }
+  .win { height: 100vh; height: 100dvh; max-width: none; margin: 0; border-width: 0; box-shadow: none; display: flex; flex-direction: column; }
+  .bar, .menu, .status { flex: none; }
+  .menu { gap: 24px; padding: 4px 16px; }
+  .status { padding: 6px 16px; }
+  .pane { flex: 1 1 0; min-height: 0; padding: 12px 16px; display: flex; }
+  .drawing, .game { flex: 1 1 auto; min-width: 0; min-height: 0; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 10px; }
+
+  /* the box and the board take whatever room is left, as big as a square gets */
+  .left { display: flex; flex-direction: column; flex: 1 1 0; min-width: 0; min-height: 0; }
+  .stage { flex: 1 1 0; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; }
+  .box { width: min(100%, 320px); max-width: none; flex: none; }
+  @supports (width: 1cqw) {
+    .stage { container-type: size; }
+    .box { width: min(100cqw, 100cqh); }
+    .bw { --sq: min(64px, calc((100cqw - 28px) / 8), calc((100cqh - 32px) / 8)); }
+  }
+  .bw { flex: none; justify-content: center; }
+  .squares { -webkit-touch-callout: none; }
+
+  .tools { margin: 8px 0 0; justify-content: space-between; }
+  .tools button { padding: 6px 0; }
+  .ask { flex: none; min-width: 0; max-width: none; display: grid; grid-template-columns: 1fr auto; grid-template-areas: "prompt go" "hint go" "shelf shelf"; column-gap: 12px; align-items: center; }
+  .ask > * { margin: 0; }
+  #step, .ask > hr, .note { display: none; }
+  #prompt { grid-area: prompt; }
+  #hint { grid-area: hint; }
+  .go { grid-area: go; padding: 0 3px 3px 0; }
+  #next { min-height: 44px; min-width: 96px; }
+  .ask > .shelf { grid-area: shelf; margin-top: 12px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .shelf button { position: relative; justify-content: center; gap: 2px; padding: 6px 0; }
+  .shelf .n { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .shelf .thumb { width: 22px; height: 22px; }
+  .shelf button[aria-current="true"] { box-shadow: 0 3px 0 #f00; }
+
+  .panel { flex: none; min-width: 0; display: flex; flex-direction: column; position: relative; }
+  .panel p, .took { margin: 0 0 6px; }
+  .panel hr { margin: 6px 0; }
+  .panel button { padding: 4px 0; }
+  .acts { grid-template-columns: repeat(4, max-content); justify-content: space-between; gap: 0; }
+  .acts button { padding: 4px 5px; }
+  .panel .acts { margin-bottom: 10px; }
+  .took { min-height: 28px; }
+  .took img { width: 24px; height: 24px; }
+  .moves { flex: none; margin: 0 0 6px; }
+  #promo { position: absolute; left: 0; right: 0; top: 0; z-index: 5; margin: 0; padding: 8px 10px 2px; background: #fff; border: 1px solid #000; }
+  #promo img { width: 40px; height: 40px; }
+}
+
+/* upright phones: the box and the board are squares, the rest gathers around them */
+@media (max-width: 720px) {
+  .left, .game { justify-content: center; }
+  .left > .stage, .game > .stage { flex: 0 1 auto; width: 100%; aspect-ratio: 1; }
+  .panel hr { display: none; }
+  .moves { height: calc(2 * 1.35em + 10px); }
+}
+@media (max-width: 720px) and (max-height: 800px) {
+  .moves, .copy { display: none; }
+}
+@media (max-width: 720px) and (max-height: 700px) {
+  .took { display: none; }
+}
+@media (max-width: 389px) {
+  .acts { grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+}
+
+/* phones on their side: box or board on the left, everything else on the right */
+@media (min-width: 721px) and (max-height: 600px) {
+  .bar { height: 26px; }
+  .menu { padding: 2px 16px; }
+  .status { min-height: 0; padding: 2px 16px; }
+  .pane { padding: 8px 16px; }
+  .drawing, .game { flex-direction: row; gap: 16px; }
+  .ask { flex: 0 0 340px; }
+  .panel { flex: 0 0 300px; min-height: 0; overflow: hidden; }
+  .panel hr { display: none; }
+  .acts { grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+  .tools { justify-content: center; gap: 32px; }
+  .moves { flex: 1 1 0; min-height: 0; height: auto; }
+}
+@media (min-width: 721px) and (max-height: 420px) {
+  .took { display: none; }
 }
