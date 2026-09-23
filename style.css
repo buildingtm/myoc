@@ -1,0 +1,154 @@
+/* Chess, by hand.
+   One typeface, one size, black on white. Links and buttons do one thing:
+   they get a red underline when you point at them. No animation anywhere.
+
+   Diatype (ABC Diatype, Dinamo) is a licensed font, so it isn't bundled.
+   If it's installed on your machine the page uses it as is. To ship it with
+   the site, drop your web font files in ./fonts/ and uncomment this:
+
+@font-face { font-family: "ABC Diatype"; font-weight: 400; src: url("fonts/ABCDiatype-Regular.woff2") format("woff2"); }
+@font-face { font-family: "ABC Diatype"; font-weight: 700; src: url("fonts/ABCDiatype-Bold.woff2") format("woff2"); }
+
+   Until then Helvetica stands in. */
+
+:root { --sq: min(64px, calc((100vw - 84px) / 8)); }
+
+* { box-sizing: border-box; font: inherit; margin: 0; }
+[hidden] { display: none !important; }
+
+html {
+  font-family: "ABC Diatype", "Diatype", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14pt;
+  line-height: 1.35;
+  color: #000;
+  background: #fff;
+}
+body { margin: 0; padding: 28px 16px 48px; }
+
+p, h1, ul, ol { margin: 0 0 0.7em; }
+ul, ol { padding: 0; list-style: none; }
+hr { border: 0; border-top: 1px solid #000; margin: 0.9em 0; }
+img { display: block; }
+
+/* everything you can press looks like text */
+button {
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button:hover,
+button:focus-visible {
+  text-decoration: underline;
+  text-decoration-color: #f00;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+button:focus-visible { outline: 2px dotted #000; outline-offset: 3px; }
+button[aria-pressed="true"],
+button[aria-current="page"],
+button[aria-current="true"] { font-weight: 700; }
+button:disabled { cursor: default; text-decoration: none; opacity: 0.35; }
+
+/* the window */
+.win {
+  max-width: 940px;
+  margin: 0 auto;
+  border: 1px solid #000;
+  box-shadow: 4px 4px 0 #000;
+  background: #fff;
+}
+.bar {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #000;
+}
+.bar span { font-weight: 700; line-height: 24px; }
+.menu { display: flex; gap: 28px; padding: 6px 20px; border-bottom: 1px solid #000; }
+.pane { padding: 24px 20px; }
+.status { border-top: 1px solid #000; padding: 6px 20px; min-height: calc(1.35em + 13px); }
+
+/* drawing */
+.drawing { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; }
+.box { border: 2px solid #000; width: 404px; max-width: 100%; line-height: 0; }
+#pad { display: block; width: 100%; height: auto; aspect-ratio: 1; cursor: crosshair; touch-action: none; background: #fff; }
+.tools { margin-top: 0.7em; display: flex; gap: 24px; }
+.ask { flex: 1; min-width: 260px; max-width: 420px; }
+.shelf li { margin: 0; }
+.shelf button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 2px 0; }
+.shelf .n { width: 5.2em; }
+.shelf .thumb { width: 44px; height: 44px; border: 1px dotted #000; }
+.shelf .thumb.on { border-style: solid; }
+.shelf .thumb img { width: 100%; height: 100%; }
+
+/* game */
+.game { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; }
+.bw { display: flex; gap: 6px; }
+.ranks { padding-top: 2px; display: grid; grid-template-rows: repeat(8, var(--sq)); width: 0.9em; text-align: right; }
+.ranks span { display: flex; align-items: center; justify-content: flex-end; }
+.files { display: grid; grid-template-columns: repeat(8, var(--sq)); padding: 2px 2px 0; text-align: center; }
+
+.squares { display: grid; grid-template-columns: repeat(8, var(--sq)); border: 2px solid #000; touch-action: none; }
+.ghost { position: fixed; left: 0; top: 0; width: var(--sq); height: var(--sq); pointer-events: none; z-index: 10; }
+.holding, .holding * { cursor: grabbing !important; -webkit-user-select: none; user-select: none; }
+.sq { position: relative; width: var(--sq); height: var(--sq); background-color: #fff; --mark: #000; }
+.sq.dark { background-color: #000; --mark: #fff; }   /* --mark is the contrast colour */
+/* old dither, two pixels per dot
+.sq.dark {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='2' height='2'/%3E%3Crect x='2' y='2' width='2' height='2'/%3E%3C/svg%3E");
+}
+*/
+.sq img { position: relative; width: 100%; height: 100%; pointer-events: none; }   /* relative so it sits over the last-move mark */
+.sq.last::before {
+  /* off the edge, or it blends into the square below */
+  content: "";
+  position: absolute;
+  left: 10px; right: 10px; bottom: 6px;
+  height: 4px;
+  background: var(--mark);
+}
+.sq.sel { box-shadow: inset 0 -5px 0 #f00; }
+.sq.chk { box-shadow: inset 0 0 0 4px #f00; }
+.sq.cap { outline: 4px solid #f00; outline-offset: -4px; }
+.sq.tgt::after {
+  /* pseudo-elements skip the * { box-sizing } rule above, so set it here or the dot lands 3px off centre */
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  box-sizing: border-box;
+  width: 22px; height: 22px;
+  background: #fff;
+  border: 3px solid #000;
+  border-radius: 50%;
+}
+.sq.mine { cursor: grab; }
+.sq:hover, .sq.over { text-decoration: none; box-shadow: inset 0 -5px 0 #f00; }
+.sq:focus-visible { outline: 3px dotted var(--mark); outline-offset: -3px; }
+
+.panel { flex: 1; min-width: 270px; }
+.acts { display: grid; grid-template-columns: max-content max-content; gap: 0 32px; }
+#state { min-height: 1.35em; }
+#promo button { display: inline-flex; flex-direction: column; align-items: center; margin-right: 14px; vertical-align: top; }
+#promo img { width: 52px; height: 52px; border: 1px solid #000; }
+#promo .lead { display: block; margin-bottom: 6px; }
+.took { display: flex; align-items: center; flex-wrap: wrap; min-height: 34px; margin: 0 0 0.4em; }
+.took .who { width: 5.8em; }
+.took img { width: 30px; height: 30px; margin-right: -4px; }
+.took .plus { margin-left: 10px; }
+.moves { border: 1px solid #000; height: 9.5em; overflow: auto; padding: 4px 10px; margin-bottom: 0.7em; }
+.moves table { border-collapse: collapse; }
+.moves td { padding: 0 18px 0 0; }
+.moves td:first-child { width: 2.6em; }
+
+@media (max-width: 720px) {
+  body { padding: 0; }
+  .win { box-shadow: none; border-width: 0 0 1px; }
+  .pane { padding: 16px; }
+  .menu, .status { padding-left: 16px; padding-right: 16px; }
+}
